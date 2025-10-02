@@ -34,6 +34,7 @@ Below you find a comparison between this image and the most used or original one
 
 | **image** | **size on disk** | **init default as** | **[distroless](https://github.com/11notes/RTFM/blob/main/linux/container/image/distroless.md)** | supported architectures
 | ---: | ---: | :---: | :---: | :---: |
+| 11notes/prometheus:3.6.0 | 26MB | 1000:1000 | ✅ | amd64, arm64, armv7 |
 | prom/prometheus | 313MB | 65534:65534 | ❌ | amd64, arm64, armv7, ppc64le, s390x |
 
 # DEFAULT CONFIG 📑
@@ -181,4 +182,4 @@ docker pull quay.io/11notes/prometheus:3.6.0
 # ElevenNotes™️
 This image is provided to you at your own risk. Always make backups before updating an image to a different version. Check the [releases](https://github.com/11notes/docker-prometheus/releases) for breaking changes. If you have any problems with using this image simply raise an [issue](https://github.com/11notes/docker-prometheus/issues), thanks. If you have a question or inputs please create a new [discussion](https://github.com/11notes/docker-prometheus/discussions) instead of an issue. You can find all my other repositories on [github](https://github.com/11notes?tab=repositories).
 
-*created 23.09.2025, 07:20:03 (CET)*
+*created 02.10.2025, 07:24:27 (CET)*
