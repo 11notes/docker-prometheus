@@ -17,7 +17,7 @@
 # ║                       BUILD                         ║
 # ╚═════════════════════════════════════════════════════╝
 # :: PROMETHEUS
-  FROM 11notes/go:1.24 AS build
+  FROM 11notes/go:1.25 AS build
   ARG APP_VERSION \
       BUILD_SRC \
       BUILD_ROOT \
@@ -42,7 +42,7 @@
     eleven distroless ${BUILD_BIN};
 
 # :: ENTRYPOINT
-  FROM 11notes/go:1.24 AS entrypoint
+  FROM 11notes/go:1.25 AS entrypoint
   COPY ./build /
   
   RUN set -ex; \
