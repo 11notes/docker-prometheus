@@ -2,31 +2,21 @@ package main
 
 import (
 	"os"
-	"io/ioutil"
 	"syscall"
+
+	"github.com/11notes/go-eleven"
 )
 
-const ENV_CONFIG = "PROMETHEUS_CONFIG"
-const ROOT_CONFIG = "/prometheus/etc/default.yml"
-const ROOT_BIN = "/usr/local/bin"
-const BIN_PROMETHEUS = "prometheus"
+const APP_BIN = "prometheus"
+const APP_CONFIG_ENV string = "PROMETHEUS_CONFIG"
+const APP_CONFIG string = "/prometheus/etc/default.yml"
 
 func main() {
-	envToFile()
-	exec()
-}
+	// write env to file if set
+	eleven.Container.EnvToFile(APP_CONFIG_ENV, APP_CONFIG)
 
-func envToFile(){
-	if config, ok := os.LookupEnv(ENV_CONFIG); ok {
-		err := ioutil.WriteFile(ROOT_CONFIG, []byte(config), os.ModePerm)
-		if err != nil {
-			os.Exit(1)
-		}
-	}
-}
-
-func exec(){
-	if err := syscall.Exec(ROOT_BIN + "/" + BIN_PROMETHEUS, []string{BIN_PROMETHEUS, "--config.file", ROOT_CONFIG, "--web.listen-address=0.0.0.0:3000", "--log.format=json", "--auto-gomaxprocs", "--auto-gomemlimit", "--storage.tsdb.path=/prometheus/var"}, os.Environ()); err != nil {
+	// start app
+	if err := syscall.Exec("/usr/local/bin/" + APP_BIN, []string{APP_BIN, "--config.file", APP_CONFIG, "--web.listen-address=0.0.0.0:9090", "--log.format=json", "--auto-gomaxprocs", "--auto-gomemlimit", "--storage.tsdb.path=/prometheus/var"}, os.Environ()); err != nil {
 		os.Exit(1)
 	}
 }

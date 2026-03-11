@@ -21,7 +21,7 @@ services:
       - "prometheus.etc:/prometheus/etc"
       - "prometheus.var:/prometheus/var"
     ports:
-      - "3000:3000/tcp"
+      - "3000:9090/tcp"
     networks:
       frontend:
     restart: "always"

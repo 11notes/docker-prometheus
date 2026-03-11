@@ -2,10 +2,11 @@
 # ║                       SETUP                         ║
 # ╚═════════════════════════════════════════════════════╝
 # GLOBAL
-  ARG APP_UID=1000 \
-      APP_GID=1000 \
+  ARG APP_UID= \
+      APP_GID= \
       BUILD_ROOT=/go/prometheus \
-      BUILD_SRC=prometheus/prometheus.git
+      BUILD_SRC=prometheus/prometheus.git \
+      APP_GO_VERSION=
   ARG BUILD_BIN=${BUILD_ROOT}/prometheus
 
 # :: FOREIGN IMAGES
@@ -17,7 +18,7 @@
 # ║                       BUILD                         ║
 # ╚═════════════════════════════════════════════════════╝
 # :: PROMETHEUS
-  FROM 11notes/go:1.25 AS build
+  FROM 11notes/go:${APP_GO_VERSION} AS build
   ARG APP_VERSION \
       BUILD_SRC \
       BUILD_ROOT \
@@ -42,7 +43,7 @@
     eleven distroless ${BUILD_BIN};
 
 # :: ENTRYPOINT
-  FROM 11notes/go:1.25 AS entrypoint
+  FROM 11notes/go:${APP_GO_VERSION} AS entrypoint
   COPY ./build /
   
   RUN set -ex; \
@@ -99,7 +100,7 @@
 
 # :: MONITORING
   HEALTHCHECK --interval=5s --timeout=2s --start-period=5s \
-    CMD ["/usr/local/bin/localhealth", "http://127.0.0.1:3000/"]
+    CMD ["/usr/local/bin/localhealth", "http://127.0.0.1:9090/"]
 
 # :: EXECUTE
   USER ${APP_UID}:${APP_GID}
