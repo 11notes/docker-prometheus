@@ -33,7 +33,7 @@ services:
         condition: "service_healthy"
         restart: true
     image: "11notes/distroless:dnspyre"
-    command: "--server adguard -c 10 -n 3 -t A --prometheus ':3000' https://raw.githubusercontent.com/11notes/static/refs/heads/main/src/benchmarks/dns/fqdn/10000"
+    command: "--server adguard -c 10 -n 3 -t A --prometheus ':3000' https://raw.githubusercontent.com/11notes/static/refs/heads/master/src/benchmarks/dns/fqdn/10000"
     read_only: true
     environment:
       TZ: "Europe/Zurich"
