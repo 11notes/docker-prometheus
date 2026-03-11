@@ -56,6 +56,14 @@ scrape_configs:
 # COMPOSE ✂️
 ```yaml
 name: "monitoring"
+
+x-lockdown: &lockdown
+  # prevents write access to the image itself
+  read_only: true
+  # prevents any process within the container to gain more privileges
+  security_opt:
+    - "no-new-privileges=true"
+
 services:
   prometheus:
     depends_on:
@@ -63,7 +71,7 @@ services:
         condition: "service_healthy"
         restart: true
     image: "11notes/prometheus:3.10.0"
-    read_only: true
+    <<: *lockdown
     environment:
       TZ: "Europe/Zurich"
       PROMETHEUS_CONFIG: |-
@@ -94,8 +102,8 @@ services:
         condition: "service_healthy"
         restart: true
     image: "11notes/distroless:dnspyre"
+    <<: *lockdown
     command: "--server adguard -c 10 -n 3 -t A --prometheus ':3000' https://raw.githubusercontent.com/11notes/static/refs/heads/master/src/benchmarks/dns/fqdn/10000"
-    read_only: true
     environment:
       TZ: "Europe/Zurich"
     networks:
@@ -105,7 +113,7 @@ services:
     # for more information about this image checkout:
     # https://github.com/11notes/docker-adguard
     image: "11notes/adguard:0.107.64"
-    read_only: true
+    <<: *lockdown
     environment:
       TZ: "Europe/Zurich"
     volumes:
@@ -195,4 +203,4 @@ This image supports nobody by default. Simply add **-nobody** to any tag and the
 # ElevenNotes™️
 This image is provided to you at your own risk. Always make backups before updating an image to a different version. Check the [releases](https://github.com/11notes/docker-prometheus/releases) for breaking changes. If you have any problems with using this image simply raise an [issue](https://github.com/11notes/docker-prometheus/issues), thanks. If you have a question or inputs please create a new [discussion](https://github.com/11notes/docker-prometheus/discussions) instead of an issue. You can find all my other repositories on [github](https://github.com/11notes?tab=repositories).
 
-*created 11.03.2026, 19:58:22 (CET)*
+*created 11.03.2026, 21:10:44 (CET)*
