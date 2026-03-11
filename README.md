@@ -1,7 +1,7 @@
-![banner](https://raw.githubusercontent.com/11notes/static/refs/heads/main/img/banner/README.png)
+![banner](https://raw.githubusercontent.com/11notes/static/refs/heads/master/img/banner/README.png)
 
 # PROMETHEUS
-![size](https://img.shields.io/badge/image_size-63MB-green?color=%2338ad2d)![5px](https://raw.githubusercontent.com/11notes/static/refs/heads/main/img/markdown/transparent5x2px.png)![pulls](https://img.shields.io/docker/pulls/11notes/prometheus?color=2b75d6)![5px](https://raw.githubusercontent.com/11notes/static/refs/heads/main/img/markdown/transparent5x2px.png)[<img src="https://img.shields.io/github/issues/11notes/docker-prometheus?color=7842f5">](https://github.com/11notes/docker-prometheus/issues)![5px](https://raw.githubusercontent.com/11notes/static/refs/heads/main/img/markdown/transparent5x2px.png)![swiss_made](https://img.shields.io/badge/Swiss_Made-FFFFFF?labelColor=FF0000&logo=data:image/svg%2bxml;base64,PHN2ZyB2ZXJzaW9uPSIxIiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDMyIDMyIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogIDxyZWN0IHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgZmlsbD0idHJhbnNwYXJlbnQiLz4KICA8cGF0aCBkPSJtMTMgNmg2djdoN3Y2aC03djdoLTZ2LTdoLTd2LTZoN3oiIGZpbGw9IiNmZmYiLz4KPC9zdmc+)
+![size](https://img.shields.io/badge/image_size-66MB-green?color=%2338ad2d)![5px](https://raw.githubusercontent.com/11notes/static/refs/heads/master/img/markdown/transparent5x2px.png)![pulls](https://img.shields.io/docker/pulls/11notes/prometheus?color=2b75d6)![5px](https://raw.githubusercontent.com/11notes/static/refs/heads/master/img/markdown/transparent5x2px.png)[<img src="https://img.shields.io/github/issues/11notes/docker-prometheus?color=7842f5">](https://github.com/11notes/docker-prometheus/issues)![5px](https://raw.githubusercontent.com/11notes/static/refs/heads/master/img/markdown/transparent5x2px.png)![swiss_made](https://img.shields.io/badge/Swiss_Made-FFFFFF?labelColor=FF0000&logo=data:image/svg%2bxml;base64,PHN2ZyB2ZXJzaW9uPSIxIiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDMyIDMyIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogIDxyZWN0IHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgZmlsbD0idHJhbnNwYXJlbnQiLz4KICA8cGF0aCBkPSJtMTMgNmg2djdoN3Y2aC03djdoLTZ2LTdoLTd2LTZoN3oiIGZpbGw9IiNmZmYiLz4KPC9zdmc+)
 
 run prometheus rootless and distroless
 
@@ -26,6 +26,7 @@ Prometheus, a Cloud Native Computing Foundation project, is a systems and servic
 >* ... this image is automatically scanned for CVEs before and after publishing
 >* ... this image is created via a secure and pinned CI/CD process
 >* ... this image is very small
+>* ... this image supports [inline configs](https://github.com/11notes/RTFM/blob/master/linux/container/image/11notes/inline-config.md)
 
 If you value security, simplicity and optimizations to the extreme, then this image might be for you.
 
@@ -34,7 +35,7 @@ Below you find a comparison between this image and the most used or original one
 
 | **image** | **size on disk** | **init default as** | **[distroless](https://github.com/11notes/RTFM/blob/main/linux/container/image/distroless.md)** | supported architectures
 | ---: | ---: | :---: | :---: | :---: |
-| 11notes/prometheus | 63MB | 1000:1000 | ✅ | amd64, arm64, armv7 |
+| 11notes/prometheus | 66MB | 1000:1000 | ✅ | amd64, arm64, armv7 |
 | prom/prometheus | 390MB | 65534:65534 | ❌ | amd64, arm64, armv7, ppc64le, riscv64, s390x |
 
 # DEFAULT CONFIG 📑
@@ -77,19 +78,23 @@ services:
       - "prometheus.etc:/prometheus/etc"
       - "prometheus.var:/prometheus/var"
     ports:
-      - "3000:3000/tcp"
+      - "3000:9090/tcp"
     networks:
       frontend:
     restart: "always"
 
-  # this image will execute 100k (10 x 10000) queries against adguard to fill your Prometheus with some data
   dnspyre:
+    # for more information about this image checkout:
+    # https://github.com/11notes/docker-distroless
+    #
+    # this image will execute 100k (10 x 10000) queries
+    # against adguard to fill your Prometheus with some data
     depends_on:
       prometheus:
         condition: "service_healthy"
         restart: true
     image: "11notes/distroless:dnspyre"
-    command: "--server adguard -c 10 -n 3 -t A --prometheus ':3000' https://raw.githubusercontent.com/11notes/static/refs/heads/main/src/benchmarks/dns/fqdn/10000"
+    command: "--server adguard -c 10 -n 3 -t A --prometheus ':3000' https://raw.githubusercontent.com/11notes/static/refs/heads/master/src/benchmarks/dns/fqdn/10000"
     read_only: true
     environment:
       TZ: "Europe/Zurich"
@@ -97,6 +102,8 @@ services:
       frontend:
 
   adguard:
+    # for more information about this image checkout:
+    # https://github.com/11notes/docker-adguard
     image: "11notes/adguard:0.107.64"
     read_only: true
     environment:
@@ -105,7 +112,6 @@ services:
       - "adguard.etc:/adguard/etc"
       - "adguard.var:/adguard/var"
     tmpfs:
-      # tmpfs volume because of read_only: true
       - "/adguard/run:uid=1000,gid=1000"
     ports:
       - "53:53/udp"
@@ -114,7 +120,6 @@ services:
     networks:
       frontend:
     sysctls:
-      # allow rootless container to access ports < 1024
       net.ipv4.ip_unprivileged_port_start: 53
     restart: "always"
 
@@ -142,7 +147,7 @@ To find out how you can change the default UID/GID of this container image, cons
 | --- | --- | --- |
 | `TZ` | [Time Zone](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) | |
 | `DEBUG` | Will activate debug option for container image and app (if available) | |
-| `PROMETHEUS_CONFIG` | If not using a yml file you can provide your config as inline yml directly in your compose | |
+| `PROMETHEUS_CONFIG` *(optional)* | Will overwrite the default config with the value of this variable if set ([inline config](https://github.com/11notes/RTFM/blob/master/linux/container/image/11notes/inline-config.md)) | |
 
 # MAIN TAGS 🏷️
 These are the main tags for the image. There is also a tag for each commit and its shorthand sha256 value.
@@ -190,4 +195,4 @@ This image supports nobody by default. Simply add **-nobody** to any tag and the
 # ElevenNotes™️
 This image is provided to you at your own risk. Always make backups before updating an image to a different version. Check the [releases](https://github.com/11notes/docker-prometheus/releases) for breaking changes. If you have any problems with using this image simply raise an [issue](https://github.com/11notes/docker-prometheus/issues), thanks. If you have a question or inputs please create a new [discussion](https://github.com/11notes/docker-prometheus/discussions) instead of an issue. You can find all my other repositories on [github](https://github.com/11notes?tab=repositories).
 
-*created 26.02.2026, 07:03:05 (CET)*
+*created 11.03.2026, 10:39:12 (CET)*
