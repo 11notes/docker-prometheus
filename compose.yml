@@ -5,7 +5,7 @@ services:
       adguard:
         condition: "service_healthy"
         restart: true
-    image: "11notes/prometheus:3.9.1"
+    image: "11notes/prometheus:3.10.0"
     read_only: true
     environment:
       TZ: "Europe/Zurich"
