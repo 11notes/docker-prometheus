@@ -3,7 +3,7 @@
   "name": "prometheus",
   "root": "/prometheus",
   "semver": {
-    "version": "3.11.1"
+    "version": "3.11.2"
   },
   "readme": {
     "description": "run prometheus rootless and distroless",
