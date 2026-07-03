@@ -30,7 +30,8 @@
       make \
       bash \
       nodejs \
-      npm;
+      npm \
+      pnpm;
 
   RUN set -ex; \
     eleven git clone ${BUILD_SRC} v${APP_VERSION};
