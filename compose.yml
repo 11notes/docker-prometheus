@@ -13,7 +13,7 @@ services:
       adguard:
         condition: "service_healthy"
         restart: true
-    image: "11notes/prometheus:3.14.0"
+    image: "11notes/prometheus:3.15.1"
     <<: *lockdown
     environment:
       TZ: "Europe/Zurich"
