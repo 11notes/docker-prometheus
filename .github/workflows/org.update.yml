@@ -44,22 +44,23 @@ jobs:
         uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
           node-version: '24'
-      - run: npm i semver
+      - run: npm i semver yaml
 
       # ╔═════════════════════════════════════════════════════╗
       # ║                   COMPARE SEMVER                    ║
       # ╚═════════════════════════════════════════════════════╝
       # COMPARE SEMVER OF CURRENT AND LATEST AND TAGS
       - name: update / compare latest with current version
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             (async()=>{
               const { Buffer } = require('node:buffer');
               const { inspect } = require('node:util');
-              const { existsSync, readFileSync, writeFileSync } = require('node:fs');
+              const { existsSync, readFileSync, writeFileSync, readdirSync } = require('node:fs');
               const { resolve } = require('node:path');
               const semver = require('semver');
+              const YAML = require('yaml');
 
               const semverExceptions = (s) => {
                 switch('${{ github.event.repository.name }}'){
@@ -67,6 +68,48 @@ jobs:
                   case 'docker-cron': core.warning(`semver exception found for cron version ${s}, setting version to major.minor`); return(s.split('.').slice(0, 2).join('.'));
                 }
                 return(s);
+              }
+
+              const updateHelmChart = (file, version, diff) => {
+                try{
+                  const path = resolve(file);
+                  if(existsSync(path)){
+                    try{
+                      const chart = YAML.parse(readFileSync(path).toString());
+                      chart.appVersion = version;
+                      chart.version = semver.inc(semver.valid(semver.coerce(chart.version)), diff);
+                      writeFileSync(path, YAML.stringify(chart));
+                    }catch(e){
+                      throw new Error(`could not parse ${file}`);
+                    }
+                  }else{
+                    throw new Error(`${file} does not exist!`);
+                  }
+                }catch(e){
+                  core.warning(e);
+                }
+              }
+
+              const updateHelm = (version, diff) => {
+                try{
+                  let path = resolve('./chart/Chart.yaml');
+                  if(existsSync(path)){
+                    updateHelmChart(path, version, diff);
+                  }else{
+                    path = resolve('./charts');
+                    if(existsSync(path)){
+                      const charts = readdirSync(path, {withFileTypes:false});
+                      for(chart of charts){
+                        path = resolve(`./charts/${chart}/Chart.yaml`);
+                        if(existsSync(path)){
+                          updateHelmChart(path, version, diff);
+                        }
+                      }
+                    }
+                  }
+                }catch(e){
+                  core.warning(e);
+                }
               }
 
               // defaults
@@ -115,10 +158,11 @@ jobs:
                 }
 
                 // semver
-                const latest = semverExceptions(semver.valid(semver.coerce(job.inputs.version)));
-                const current = semverExceptions(semver.valid(semver.coerce(job.json.semver.version)));
+                const latest = semver.valid(semver.coerce(job.inputs.version));
+                const current = semver.valid(semver.coerce(job.json.semver.version));
                 const tag = semver.valid(semver.coerce(job.inputs.tag));
                 const checks = {latestTagExists:false};
+                const force = job.inputs?.force || false;
 
                 try{
                   const tag = await fetch(`https://hub.docker.com/v2/repositories/${job.json.image}/tags/${latest}`);
@@ -131,8 +175,11 @@ jobs:
                 }
 
                 // compare
-                if(latest && latest !== current && !checks.latestTagExists){
-                  core.info(`new ${semver.diff(current, latest)} release found (${latest}), updating ...`)
+                if(force || (latest && latest !== current && !checks.latestTagExists)){
+                  if(force){
+                    core.info('force update image');
+                  }
+                  core.info(`new ${semver.diff(current, latest)} release found (${latest}), updating ...`);
                   job.json.semver.version = latest;
 
                   // check if app has additional parameters
@@ -141,10 +188,9 @@ jobs:
                     build.args = {
                       version_build:job.inputs.build,
                     };
-                    job.json.build.args.version_build = job.inputs.build;
+                    job.json.build = job.inputs.build;
                   }else if(job.inputs?.build?.args){
-                    build.args = job.inputs.build.args;
-                    job.json.build.args.version_build = job.inputs.build.args;
+                    job.json.build.args = job.inputs.build.args;
                   }
 
                   // update .json
@@ -165,6 +211,7 @@ jobs:
                     core.exportVariable('LATEST_TAG', semver.inc(tag, semver.diff(current, latest)));
                     core.exportVariable('LATEST_VERSION', latest);
                     if(job.inputs?.build) core.exportVariable('LATEST_BUILD', job.inputs.build);
+                    updateHelm(latest, semver.diff(current, latest));
                   }catch(e){
                     core.setFailed(e);
                   }
@@ -184,6 +231,8 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           echo "WORKFLOW_UPDATE_PRE_COMMIT=$(git log --oneline | head -n 1 | awk -F ' ' '{print $1}')" >> "${GITHUB_ENV}"
           git add .json
+          git add ./chart 2>/dev/null || true
+          git add ./charts 2>/dev/null || true
           git commit -m "chore: auto upgrade to v${{ env.LATEST_VERSION }}"
           git push origin HEAD:master
 

@@ -1,5 +1,6 @@
 {
   "image": "11notes/prometheus",
+  "platform": "amd64,arm64",
   "name": "prometheus",
   "root": "/prometheus",
   "semver": {
@@ -20,5 +21,7 @@
     "comparison": {
       "image": "prom/prometheus"
     }
-  }
+  },
+  "unraid": true,
+  "nobody": true
 }
